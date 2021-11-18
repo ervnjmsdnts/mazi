@@ -1,10 +1,9 @@
 import time
 import jwt
-from decouple import config
 from passlib.context import CryptContext
 
-JWT_SECRET = config("JWT_SECRET")
-JWT_ALGO = config("JWT_HASH")
+from app.core.config import JWT_SECRET, JWT_ALGO
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
