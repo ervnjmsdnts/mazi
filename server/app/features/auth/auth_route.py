@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 
 from app.features.user.user_model import User
 from app.core.db import usersCollection
@@ -11,13 +11,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register")
-async def register(user: User):
+async def register(user: User, confirmPassword: str = Body(...)):
     newUser = dict(user)
 
     userExist = await usersCollection.find_one({"email": newUser["email"]})
 
     if userExist:
         raise HTTPException(400, "User already exist with this email")
+
+    if newUser["password"] != confirmPassword:
+        raise HTTPException(400, "Password do not match")
 
     newUser["password"] = hashPassword(user.password)
 
