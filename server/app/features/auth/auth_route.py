@@ -4,7 +4,8 @@ from app.features.user.user_model import User
 from app.core.db import usersCollection
 
 from .auth_model import AuthLogin
-from .auth_util import hashPassword
+from .auth_util import hashPassword, verifyEmail
+from .emailConfirmation.send_email import sendEmail
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -21,7 +22,10 @@ async def register(user: User):
     newUser["password"] = hashPassword(user.password)
 
     await usersCollection.insert_one(newUser)
-    return newUser
+
+    await sendEmail("Email Confirmation", newUser["email"], newUser["username"])
+
+    return {"message": "User has been created"}
 
 
 @router.post("/login")
@@ -32,3 +36,13 @@ async def login(user: AuthLogin):
 @router.post("/logout")
 async def logout():
     pass
+
+
+@router.get("/confirmation/{id}")
+async def confirmation(id):
+    result = await verifyEmail(id)
+
+    if result:
+        return {"message": "user email confirmed"}
+
+    return {"message": "user email not confirmed"}

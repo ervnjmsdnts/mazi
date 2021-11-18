@@ -5,13 +5,14 @@ from pydantic.fields import Field
 
 
 class Gender(str, Enum):
-    MALE = "male"
-    FEMALE = "female"
+    MALE = "Male"
+    FEMALE = "Female"
 
 
 class User(BaseModel):
     firstName: str = Field(...)
     lastName: str = Field(...)
+    username: str = Field(...)
     email: str = Field(...)
     password: str = Field(...)
     gender: Optional[Gender] = None

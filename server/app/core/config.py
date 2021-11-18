@@ -2,3 +2,10 @@ from decouple import config
 
 JWT_SECRET = config("JWT_SECRET")
 JWT_ALGO = config("JWT_HASH")
+EMAIL_TOKEN = config("EMAIL_TOKEN")
+MAIL_USERNAME = config("MAIL_USERNAME")
+MAIL_PASSWORD = config("MAIL_PASSWORD")
+MAIL_FROM = config("MAIL_FROM")
+MAIL_PORT = config("MAIL_PORT")
+MAIL_SERVER = config("MAIL_SERVER")
+MAIL_FROM_NAME = config("MAIL_FROM_NAME")

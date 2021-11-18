@@ -2,7 +2,8 @@ import time
 import jwt
 from passlib.context import CryptContext
 
-from app.core.config import JWT_SECRET, JWT_ALGO
+from app.core.config import JWT_SECRET, JWT_ALGO, EMAIL_TOKEN
+from app.core.db import usersCollection
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -12,8 +13,8 @@ def token_response(token: str):
     return {"access_token": token}
 
 
-def signJWT(userId: str):
-    payload = {"userId": userId, "expire": time.time() + 600}
+def signJWT(username: str):
+    payload = {"username": username, "expire": time.time() + 600}
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
 
     return token_response(token)
@@ -34,3 +35,13 @@ def hashPassword(inputPassword: str):
 
 def verifyPassword(hashedPassword, plainPassword):
     return pwd_context.verify(plainPassword, hashedPassword)
+
+
+async def verifyEmail(token: str):
+    try:
+        payload = jwt.decode(token, EMAIL_TOKEN, algorithms=JWT_ALGO)
+        await usersCollection.update_one({"username": payload["username"]}, {"$set": {"confirmedEmail": True}})
+
+        return True
+    except:
+        return False
