@@ -1,8 +1,8 @@
 from decouple import config
 
-JWT_SECRET = config("JWT_SECRET")
-JWT_ALGO = config("JWT_HASH")
-EMAIL_TOKEN = config("EMAIL_TOKEN")
+TOKEN_SECRET = config("TOKEN_SECRET")
+VERIFY_TOKEN_SECRET = config("VERIFY_TOKEN_SECRET")
+
 MAIL_USERNAME = config("MAIL_USERNAME")
 MAIL_PASSWORD = config("MAIL_PASSWORD")
 MAIL_FROM = config("MAIL_FROM")

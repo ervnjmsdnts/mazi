@@ -1,18 +1,7 @@
-import jwt
-import time
 from pathlib import Path
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 
-from app.core.config import (
-    MAIL_FROM,
-    MAIL_FROM_NAME,
-    MAIL_PASSWORD,
-    MAIL_PORT,
-    MAIL_SERVER,
-    MAIL_USERNAME,
-    EMAIL_TOKEN,
-    JWT_ALGO,
-)
+from app.core.config import MAIL_FROM, MAIL_FROM_NAME, MAIL_PASSWORD, MAIL_PORT, MAIL_SERVER, MAIL_USERNAME
 
 conf = ConnectionConfig(
     MAIL_USERNAME=MAIL_USERNAME,
@@ -27,11 +16,7 @@ conf = ConnectionConfig(
 )
 
 
-async def sendEmail(subject: str, email_to: str, username: str):
-    payload = {"username": username, "expire": time.time() + 600}
-
-    token = jwt.encode(payload, EMAIL_TOKEN, algorithm=JWT_ALGO)
-
+async def sendEmail(subject: str, email_to: str, token: str):
     template = f"""
     <!DOCTYPE html>
     <html>
@@ -41,10 +26,8 @@ async def sendEmail(subject: str, email_to: str, username: str):
             <div style="display: flex; align-items: center; justify-content: center; flex-direction:column">
                 <h3>Email Confirmation</h3>
                 <br>
-
                 <a style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; font-size: 1rem; text-decoration: none;
                 background: #0275D8; color: white;" href="http://localhost:8000/auth/confirmation/{token}">Verify Your Email</a>
-
                 <br>
                 <p>Please kindly ignore this email if you did not register for Mazi</p>
             </div>
@@ -52,12 +35,7 @@ async def sendEmail(subject: str, email_to: str, username: str):
     </html>
     """
 
-    message = MessageSchema(
-        subject=subject,
-        recipients=[email_to],
-        body=template,
-        subtype="html",
-    )
+    message = MessageSchema(subject=subject, recipients=[email_to], body=template, subtype="html")
 
     fm = FastMail(conf)
 
