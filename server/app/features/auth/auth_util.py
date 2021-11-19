@@ -1,5 +1,6 @@
-import time
 import jwt
+from fastapi import HTTPException
+from datetime import datetime, timedelta
 from passlib.context import CryptContext
 
 from app.core.config import JWT_SECRET, JWT_ALGO, EMAIL_TOKEN
@@ -14,7 +15,7 @@ def token_response(token: str):
 
 
 def signJWT(username: str):
-    payload = {"username": username, "expire": time.time() + 600}
+    payload = {"username": username, "exp": datetime.utcnow() + timedelta(days=7)}
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGO)
 
     return token_response(token)
@@ -22,18 +23,20 @@ def signJWT(username: str):
 
 def decodeJWT(token: str):
     try:
-        token = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGO)
+        payload = jwt.decode(token, JWT_SECRET, algorithms=JWT_ALGO)
 
-        return token if token["expire"] >= time.time() else None
-    except:
-        return "Token Error"
+        return payload["username"]
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(400, "Token has expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(400, "Invalid token")
 
 
 def hashPassword(inputPassword: str):
     return pwd_context.hash(inputPassword)
 
 
-def verifyPassword(hashedPassword, plainPassword):
+def verifyPassword(plainPassword, hashedPassword):
     return pwd_context.verify(plainPassword, hashedPassword)
 
 

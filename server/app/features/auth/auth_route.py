@@ -4,7 +4,7 @@ from app.features.user.user_model import User
 from app.core.db import usersCollection
 
 from .auth_model import AuthLogin
-from .auth_util import hashPassword, verifyEmail
+from .auth_util import hashPassword, signJWT, verifyEmail, verifyPassword
 from .emailConfirmation.send_email import sendEmail
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -33,12 +33,24 @@ async def register(user: User, confirmPassword: str = Body(...)):
 
 @router.post("/login")
 async def login(user: AuthLogin):
-    pass
+    authUser = dict(user)
 
+    dbUser = await usersCollection.find_one({"email": authUser["email"]})
 
-@router.post("/logout")
-async def logout():
-    pass
+    if not dbUser:
+        raise HTTPException(404, "User not found")
+
+    if dbUser["confirmedEmail"] == False:
+        raise HTTPException(401, "Email is not verified yet")
+
+    isVerifiedPassword = verifyPassword(authUser["password"], dbUser["password"])
+
+    if not isVerifiedPassword:
+        raise HTTPException(401, "Password is wrong")
+
+    token = signJWT(dbUser["username"])
+
+    return token
 
 
 @router.get("/confirmation/{id}")
