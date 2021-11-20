@@ -1,11 +1,10 @@
-from typing import List
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Body
 import jwt
 
 from app.core.config import VERIFY_TOKEN_SECRET
 from app.core.db import user_collection
 
-from .user_models import Interest, User, UserUpdate
+from .user_models import Gender, Interest, User, UserUpdate
 from .user_utils import current_user
 
 
@@ -47,3 +46,10 @@ async def getInterest(user: User = Depends(current_user)):
     user_interest = await user_collection.find_one({"id": user.id}, {"_id": 0})
 
     return user_interest
+
+
+@user_router.put("/gender")
+async def setGender(gender: Gender = Body(..., embed="gender"), user: UserUpdate = Depends(current_user)):
+    await user_collection.update_one({"id": user.id}, {"$set": {"gender": gender.value}})
+
+    return {"message": f"{user.firstName}'s gender has been updated"}
