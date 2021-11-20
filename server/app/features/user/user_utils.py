@@ -28,12 +28,13 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
         await sendEmail("Email Confirmation", user.email, token)
 
 
-async def get_user_manager(user_db=Depends(getUserDb)):
+async def getUserManager(user_db=Depends(getUserDb)):
     yield UserManager(user_db)
 
 
 jwt_authentication = JWTAuthentication(TOKEN_SECRET, lifetime_seconds=604800, tokenUrl="auth/jwt/login")
 
-fastapi_users = FastAPIUsers(get_user_manager, [jwt_authentication], User, UserCreate, UserUpdate, UserDB)
+fastapi_users = FastAPIUsers(getUserManager, [jwt_authentication], User, UserCreate, UserUpdate, UserDB)
 
 current_user = fastapi_users.current_user(active=True, verified=True)
+super_user = fastapi_users.current_user(active=True, verified=True, superuser=True)
