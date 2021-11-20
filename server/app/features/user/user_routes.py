@@ -5,7 +5,7 @@ from app.core.config import VERIFY_TOKEN_SECRET
 from app.core.db import user_collection
 
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter()
 
 
 async def verifyEmail(token: str):
@@ -19,7 +19,7 @@ async def verifyEmail(token: str):
         return False
 
 
-@router.get("/confirmation/{id}")
+@router.get("/auth/confirmation/{id}", tags=["auth"])
 async def confirmation(id: str):
     result = await verifyEmail(id)
 

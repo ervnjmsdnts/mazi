@@ -7,7 +7,7 @@ import jwt
 
 from app.core.db import getUserDb
 from app.core.config import VERIFY_TOKEN_SECRET, TOKEN_SECRET
-from app.core.services.email_service import send_email
+from app.core.services.email_service import sendEmail
 
 from .user_models import UserCreate, UserDB, User, UserUpdate
 
@@ -25,7 +25,7 @@ class UserManager(BaseUserManager[UserCreate, UserDB]):
     async def on_after_register(self, user: UserDB, request: Optional[Request] = None):
         payload = {"email": user.email}
         token = jwt.encode(payload, self.verification_token_secret)
-        await send_email("Email Confirmation", user.email, token)
+        await sendEmail("Email Confirmation", user.email, token)
 
 
 async def get_user_manager(user_db=Depends(getUserDb)):

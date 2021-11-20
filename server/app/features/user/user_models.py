@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import List, Optional
 from fastapi_users import models
-from pydantic import BaseModel
 
 
 class Gender(str, Enum):
@@ -9,23 +8,18 @@ class Gender(str, Enum):
     FEMALE = "Female"
 
 
-class Interest(BaseModel):
-    name: str
-
-
 class User(models.BaseUser):
     firstName: str
     lastName: str
     gender: Optional[Gender] = None
     avatar: Optional[str] = None
-    interests: Optional[List[Interest]] = None
+    interest: Optional[List[str]] = None
 
 
 class UserCreate(models.BaseUserCreate):
     firstName: str
     lastName: str
     confirmationPassword: str
-    pass
 
 
 class UserUpdate(models.BaseUserUpdate):
