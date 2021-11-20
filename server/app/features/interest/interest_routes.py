@@ -24,9 +24,9 @@ async def createInterest(interest: Interest):
 @router.put("/{category}")
 async def addInterest(category: str, interest: InterestUpdate):
     interest_data = dict(interest)
-    interestExist = await interest_collection.find_one({"category": category})
+    categoryExist = await interest_collection.find_one({"category": category})
 
-    if interestExist:
+    if categoryExist:
         updated_interest = await interest_collection.update_one(
             {"category": category}, {"$push": {"interests": interest_data["interests"]}}
         )
@@ -37,3 +37,22 @@ async def addInterest(category: str, interest: InterestUpdate):
         return False
 
     return {"message": "Interest Updated"}
+
+
+@router.delete("/{category}")
+async def removeInterest(category: str, interest: InterestUpdate):
+    interest_data = dict(interest)
+
+    categoryExist = await interest_collection.find_one({"category": category})
+
+    if categoryExist:
+        interest_exist = await interest_collection.find_one({"interests": {"$in": [interest_data["interests"]]}})
+
+        if interest_exist:
+            await interest_collection.update_one(
+                {"category": category}, {"$pull": {"interests": interest_data["interests"]}}
+            )
+
+            return {"message": f"Interest in {category} category has been removed"}
+
+        return {"message": "Cannot find interest"}
