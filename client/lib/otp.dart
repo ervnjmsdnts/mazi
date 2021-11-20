@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'verified.dart';
@@ -238,7 +237,7 @@ class _OtpNumberState extends State<OtpNumber> {
                 duration: Duration(seconds: 40),
                 builder: (BuildContext context, num value, child) =>
                     Text(
-                      "00:${value!.toInt()}",
+                      "00:${value.toInt()}",
                       style: TextStyle(
                         color: Color(0xFFFF9CDA),
                         fontFamily: "Chivo-Light",

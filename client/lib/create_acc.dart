@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'number.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 class CreateAccount extends StatelessWidget {
   const CreateAccount({Key? key}) : super(key: key);
 
@@ -19,9 +20,11 @@ class CreateAccount extends StatelessWidget {
     );
   }
 }
-
-TextEditingController pass = TextEditingController();
-TextEditingController confirmpass = TextEditingController();
+TextEditingController emailController = TextEditingController();
+TextEditingController firstnameController = TextEditingController();
+TextEditingController lastnameController = TextEditingController();
+TextEditingController passController = TextEditingController();
+TextEditingController confirmpassController = TextEditingController();
 bool isNext = false;
 GlobalKey<FormState> formkey = GlobalKey<FormState>();
 GlobalKey<FormState> formkey2 = GlobalKey<FormState>();
@@ -39,7 +42,28 @@ void validate(){
   }
 }
 
-
+Future<void> Register() async {
+  Map<String, dynamic> data = {
+    'email': emailController.text,
+    'password': passController.text,
+    'firstName': firstnameController.text,
+    'lastName': lastnameController.text,
+    'confirmationPassword': confirmpassController.text,
+  };
+  var body = json.encode(data);
+  var response = await http.post(Uri.parse("http://10.0.2.2:8000/auth/register"),
+     headers: {"Content-Type":"application/json"},
+      body: body
+  );
+  if (response.statusCode == 200) {
+    print("success");
+  }else{
+    print(response.statusCode);
+    print(response.body);
+    print(body);
+    print(body.runtimeType);
+  }
+}
 
 class Info extends StatelessWidget {
   const Info({Key? key}) : super(key: key);
@@ -75,6 +99,7 @@ class Info extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
+            controller: firstnameController,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -117,6 +142,7 @@ class Info extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
+            controller: lastnameController,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -159,6 +185,7 @@ class Info extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
+            controller: emailController,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -202,7 +229,7 @@ class Info extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
-            controller: pass,
+            controller: passController,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -247,7 +274,7 @@ class Info extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
-            controller: confirmpass,
+            controller: confirmpassController,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -263,7 +290,7 @@ class Info extends StatelessWidget {
               if(value!.isEmpty){
                 return "Required";
               }
-              if(pass.text != confirmpass.text){
+              if(passController.text != confirmpassController.text){
                 return "Passwords do not match";
               }else{
                 return null;
@@ -295,14 +322,7 @@ class Next extends StatelessWidget {
             if (isNext != true) {
               validate();
             }else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) {
-                      return const MobileNumber();
-                    }
-                ),
-              );
+             Register();
             }
           },
           child: RichText(
