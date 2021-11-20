@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 import jwt
 
 from app.core.config import VERIFY_TOKEN_SECRET
