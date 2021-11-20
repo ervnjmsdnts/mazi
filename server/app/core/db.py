@@ -8,8 +8,9 @@ DATABASE_URL = "mongodb://localhost:27017"
 client = AsyncIOMotorClient(DATABASE_URL, uuidRepresentation="standard")
 
 db = client.mazi
-userCollection = db.users
+user_collection = db.users
+interest_collection = db.interests
 
 
 async def getUserDb():
-    yield MongoDBUserDatabase(UserDB, userCollection)
+    yield MongoDBUserDatabase(UserDB, user_collection)

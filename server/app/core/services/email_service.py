@@ -16,7 +16,7 @@ conf = ConnectionConfig(
 )
 
 
-async def sendEmail(subject: str, email_to: str, token: str):
+async def send_email(subject: str, email_to: str, token: str):
     template = f"""
     <!DOCTYPE html>
     <html>

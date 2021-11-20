@@ -2,7 +2,7 @@ from fastapi import APIRouter
 import jwt
 
 from app.core.config import VERIFY_TOKEN_SECRET
-from app.core.db import userCollection
+from app.core.db import user_collection
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 async def verifyEmail(token: str):
     try:
         payload = jwt.decode(token, VERIFY_TOKEN_SECRET, algorithms="HS256")
-        await userCollection.update_one({"email": payload["email"]}, {"$set": {"is_verified": True}})
+        await user_collection.update_one({"email": payload["email"]}, {"$set": {"is_verified": True}})
 
         return True
 
