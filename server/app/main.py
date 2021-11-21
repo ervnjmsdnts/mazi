@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 
 from app.features.user import user_routes
 from app.features.user.user_utils import fastapi_users, jwt_authentication

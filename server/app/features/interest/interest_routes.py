@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import APIRouter, HTTPException
 
 from app.core.db import interest_collection
@@ -5,6 +6,19 @@ from app.core.db import interest_collection
 from .interest_models import Interest, InterestUpdate
 
 router = APIRouter(prefix="/interest", tags=["interest"])
+
+
+def interestHelper(interest) -> dict:
+    return {"id": str(interest["_id"]), "category": interest["category"], "interests": interest["interests"]}
+
+
+@router.get("")
+async def getInterest():
+    interests = []
+    async for interest in interest_collection.find():
+        interests.append(interestHelper(interest))
+
+    return interests
 
 
 @router.post("")
