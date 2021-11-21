@@ -1,5 +1,7 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -21,11 +23,72 @@ class LoginScreen extends StatelessWidget {
 }
 GlobalKey<FormState> formkey = GlobalKey<FormState>();
 GlobalKey<FormState> formkey2 = GlobalKey<FormState>();
+TextEditingController emailController = TextEditingController();
+TextEditingController passController = TextEditingController();
 void validate(){
   if(formkey.currentState!.validate() && formkey2.currentState!.validate()){
     print('validated');
   }else{
     print('Not Validated');
+  }
+}
+
+Future<void> Register(BuildContext context) async {
+
+  void showBanner() => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Email already exists, please try another one"),
+      )
+  );
+
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Register Successful'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('An email verification has been sent to you.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) {
+                        return const LoginScreen();
+                      }
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Map<String, dynamic> data = {
+    'email': emailController.text,
+    'password': passController.text,
+  };
+  var body = json.encode(data);
+  var response = await http.post(Uri.parse("http://10.0.2.2:8000/auth/jwt/login"),
+      headers: {"Content-Type":"application/json"},
+      body: body
+  );
+  if (response.statusCode == 201) {
+    _showMyDialog();
+  }else{
+    showBanner();
   }
 }
 

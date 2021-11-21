@@ -1,3 +1,7 @@
+
+
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 class LocationScreen extends StatelessWidget {
@@ -76,8 +80,9 @@ class _LocationButtonState extends State<LocationButton> {
     var position = await Geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
     var lastPosition = await Geolocator.getLastKnownPosition();
+    double lat = position.latitude;
+    double long = position.longitude;
     print(lastPosition);
-
     setState(() {
       locationMessage = "$position.latitude, $position.longitude";
     });

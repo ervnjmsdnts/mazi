@@ -1,6 +1,8 @@
+import 'package:mazi/login.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:progress_dialog/progress_dialog.dart';
 class CreateAccount extends StatelessWidget {
   const CreateAccount({Key? key}) : super(key: key);
 
@@ -20,6 +22,7 @@ class CreateAccount extends StatelessWidget {
     );
   }
 }
+bool isRegister = false;
 TextEditingController emailController = TextEditingController();
 TextEditingController firstnameController = TextEditingController();
 TextEditingController lastnameController = TextEditingController();
@@ -31,18 +34,51 @@ GlobalKey<FormState> formkey2 = GlobalKey<FormState>();
 GlobalKey<FormState> formkey3 = GlobalKey<FormState>();
 GlobalKey<FormState> formkey4 = GlobalKey<FormState>();
 GlobalKey<FormState> formkey5 = GlobalKey<FormState>();
-void validate(){
-  if(formkey.currentState!.validate() && formkey2.currentState!.validate()
-      && formkey3.currentState!.validate() && formkey4.currentState!.validate()
-      && formkey5.currentState!.validate()){
-    print('validated');
-    isNext = true;
-  }else{
-    print('Not Validated');
-  }
-}
 
-Future<void> Register() async {
+
+Future<void> Register(BuildContext context) async {
+
+  void showBanner() => ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Email already exists, please try another one"),
+      )
+  );
+
+  Future<void> _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Register Successful'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: const <Widget>[
+                Text('An email verification has been sent to you.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) {
+                        return const LoginScreen();
+                      }
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
   Map<String, dynamic> data = {
     'email': emailController.text,
     'password': passController.text,
@@ -55,15 +91,14 @@ Future<void> Register() async {
      headers: {"Content-Type":"application/json"},
       body: body
   );
-  if (response.statusCode == 200) {
-    print("success");
+  if (response.statusCode == 201) {
+    _showMyDialog();
   }else{
-    print(response.statusCode);
-    print(response.body);
-    print(body);
-    print(body.runtimeType);
+    showBanner();
   }
 }
+
+
 
 class Info extends StatelessWidget {
   const Info({Key? key}) : super(key: key);
@@ -304,8 +339,22 @@ class Info extends StatelessWidget {
   }
 }
 
+void validateCreate(BuildContext context){
+  final ProgressDialog pr = ProgressDialog(context, type: ProgressDialogType.Normal);
+  if(formkey.currentState!.validate()&&
+      formkey2.currentState!.validate()&&
+      formkey3.currentState!.validate()&&
+      formkey4.currentState!.validate()&&
+      formkey5.currentState!.validate()){
+    pr.show();
+    Future.delayed(Duration(seconds: 3)).then((value){pr.hide();});
+    Register(context);
+  }
+}
+
 class Next extends StatelessWidget {
   const Next({Key? key}) : super(key: key);
+
 
   @override
   Widget build(BuildContext context) {
@@ -319,12 +368,8 @@ class Next extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12)
           ),
           onPressed: () {
-            if (isNext != true) {
-              validate();
-            }else {
-             Register();
-            }
-          },
+                validateCreate(context);
+              },
           child: RichText(
 
               text: const TextSpan(text: 'Next ',
@@ -343,5 +388,7 @@ class Next extends StatelessWidget {
     );
   }
 }
+
+
 
 
