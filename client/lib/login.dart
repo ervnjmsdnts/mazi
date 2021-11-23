@@ -1,10 +1,12 @@
 import 'dart:convert';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:mazi/location.dart';
+import 'models/token.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,70 +27,43 @@ GlobalKey<FormState> formkey = GlobalKey<FormState>();
 GlobalKey<FormState> formkey2 = GlobalKey<FormState>();
 TextEditingController emailController = TextEditingController();
 TextEditingController passController = TextEditingController();
-void validate(){
-  if(formkey.currentState!.validate() && formkey2.currentState!.validate()){
-    print('validated');
-  }else{
-    print('Not Validated');
-  }
-}
+
 
 Future<void> Register(BuildContext context) async {
-
+  final SharedPreferences _pref = await SharedPreferences.getInstance();
   void showBanner() => ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("Email already exists, please try another one"),
+        content: Text("Wrong email or password, please try again"),
       )
   );
 
-  Future<void> _showMyDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Register Successful'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: const <Widget>[
-                Text('An email verification has been sent to you.'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Ok'),
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) {
-                        return const LoginScreen();
-                      }
-                  ),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
-
-  Map<String, dynamic> data = {
-    'email': emailController.text,
+  Map<String, String> data = {
+    'username': emailController.text,
     'password': passController.text,
   };
-  var body = json.encode(data);
   var response = await http.post(Uri.parse("http://10.0.2.2:8000/auth/jwt/login"),
-      headers: {"Content-Type":"application/json"},
-      body: body
+      headers: {"Content-Type":"application/x-www-form-urlencoded"},
+      body: data
   );
-  if (response.statusCode == 201) {
-    _showMyDialog();
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> parse = json.decode(response.body);
+    Token token = Token.fromJson(parse);
+    final SharedPreferences pref = _pref;
+    await pref.setString("token", token.accessToken);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) {
+            return const LocationScreen();
+          }
+      ),
+    );
   }else{
     showBanner();
+    print(data);
+    print(response.body);
+    print(response.statusCode);
   }
 }
 
@@ -130,6 +105,7 @@ class EmailPass extends StatelessWidget {
             border: Border.all(color: const Color(0xFF004E9A))
           ),
           child:TextFormField(
+            controller: emailController,
             style: const TextStyle(
               color: Colors.white,
               fontFamily: 'Chivo-Light',
@@ -176,6 +152,7 @@ class EmailPass extends StatelessWidget {
               border: Border.all(color: const Color(0xFF004E9A))
           ),
           child: TextFormField(
+            controller: passController,
             style: const TextStyle(
                 color: Colors.white,
                 fontFamily: 'Chivo-Light',
@@ -202,6 +179,17 @@ class EmailPass extends StatelessWidget {
   }
 }
 
+void validate(BuildContext context){
+  final ProgressDialog pr = ProgressDialog(context, type: ProgressDialogType.Normal);
+  if(formkey.currentState!.validate() && formkey2.currentState!.validate()){
+    pr.show();
+    Future.delayed(Duration(seconds: 3)).then((value){pr.hide();});
+    Register(context);
+  }else{
+    print('Not Validated');
+  }
+}
+
 class Login extends StatelessWidget {
   const Login({Key? key}) : super(key: key);
 
@@ -217,7 +205,7 @@ class Login extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30)
           ),
           onPressed: () {
-            validate();
+            validate(context);
           },
           child: const Text(
             'Log In',

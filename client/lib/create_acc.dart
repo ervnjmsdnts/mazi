@@ -62,7 +62,7 @@ Future<void> Register(BuildContext context) async {
             TextButton(
               child: const Text('Ok'),
               onPressed: () {
-                Navigator.pushReplacement(
+                Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) {

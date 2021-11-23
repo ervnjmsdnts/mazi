@@ -1,28 +1,31 @@
-
-
-import 'dart:ffi';
-
+import 'package:location/location.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'gender.dart';
 class LocationScreen extends StatelessWidget {
   const LocationScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      backgroundColor: const Color(0xFF041B2D),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return new WillPopScope(
+      child:
+      Scaffold(
+        resizeToAvoidBottomInset: false,
+        backgroundColor: const Color(0xFF041B2D),
+        body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
 
-        children: [
-          LocationText(),
-          SizedBox(height: 50),
-          LocationButton(),
-          SizedBox(height: 250),
-          LocationSubtext()
-        ],
+          children: [
+            LocationText(),
+            SizedBox(height: 50),
+            LocationButton(),
+            SizedBox(height: 250),
+            LocationSubtext()
+          ],
+        ),
       ),
+      onWillPop: () async {
+        return false;
+      },
     );
   }
 }
@@ -75,18 +78,9 @@ class LocationButton extends StatefulWidget {
 }
 
 class _LocationButtonState extends State<LocationButton> {
-  var locationMessage = "";
-  void getCurrentLocation() async {
-    var position = await Geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    var lastPosition = await Geolocator.getLastKnownPosition();
-    double lat = position.latitude;
-    double long = position.longitude;
-    print(lastPosition);
-    setState(() {
-      locationMessage = "$position.latitude, $position.longitude";
-    });
-  }
+  var location = new Location();
+
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -99,17 +93,23 @@ class _LocationButtonState extends State<LocationButton> {
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30)
           ),
 
-          onPressed: () {
-            getCurrentLocation();
-            /* Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) {
-                    return const LocationScreen();
-                  }
-              ),
-            ); */
-          },
+          onPressed: () async {
+            var currentLocation = await location.getLocation();
+            var long = currentLocation.longitude;
+            var lat = currentLocation.latitude;
+            print(long);
+            print(lat);
+            if(lat != null && long != null){
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) {
+                      return const GenderScreen();
+                    }
+                ),
+              );
+              }
+            },
           child: const Text(
             'Enable Location',
             style: TextStyle(
@@ -119,7 +119,6 @@ class _LocationButtonState extends State<LocationButton> {
             ),
           ),
         ),
-        Text("Position: $locationMessage")
       ],
     );
   }
