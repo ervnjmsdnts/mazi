@@ -9,10 +9,6 @@ class Gender(str, Enum):
     FEMALE = "Female"
 
 
-class GenderCreate(BaseModel):
-    gender = Gender
-
-
 class Interest(BaseModel):
     interests: List[str]
 
