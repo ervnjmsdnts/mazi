@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Header
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_users import jwt
 from uuid import UUID
@@ -14,6 +15,12 @@ from app.features.interest import interest_routes
 
 
 app = FastAPI()
+
+origins = ["http://localhost:3000", "http://localhost:8000"]
+
+app.add_middleware(
+    CORSMiddleware, allow_origins=origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"]
+)
 
 app.include_router(
     fastapi_users.get_auth_router(jwt_authentication, requires_verification=True), prefix="/auth/jwt", tags=["auth"]
