@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'welcome.dart';
 class InterestScreen extends StatefulWidget {
   const InterestScreen({Key? key}) : super(key: key);
 
@@ -13,7 +14,7 @@ class InterestScreen extends StatefulWidget {
 class _InterestScreenState extends State<InterestScreen> {
   @override
   Widget build(BuildContext context) {
-    return new WillPopScope(
+    return WillPopScope(
       child:
       Scaffold(
         resizeToAvoidBottomInset: false,
@@ -1459,7 +1460,14 @@ Future<void> setInterest(BuildContext context) async {
       body: body
   );
   if (response.statusCode == 200) {
-    print(response.body);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) {
+            return const WelcomeScreen();
+          }
+      ),
+    );
   }
   else
     print(response.body);

@@ -63,9 +63,10 @@ class Welcoming extends StatelessWidget{
         ),
         const SizedBox(height: 14,),
         Container(
-          padding: const EdgeInsets.all(40.0),
-          width: 100,
-          color: Colors.white,
+          child: Image.asset('assets/images/unnamed.png',
+          width: 200,
+            height: 200,
+          ),
         ),
         const SizedBox(height: 14,),
         const Text('The Future of',
