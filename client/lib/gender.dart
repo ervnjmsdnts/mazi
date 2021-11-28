@@ -82,6 +82,7 @@ Future<void> setGender(BuildContext context, String value) async {
       headers: {"Content-Type":"application/json","Authorization":"Bearer $token"},
       body: body
   );
+  print(token);
   if (response.statusCode == 200) {
     print(response.body);
     Navigator.push(

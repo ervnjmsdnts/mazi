@@ -76,11 +76,7 @@ class EmailPass extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children:  [
-        Container(
-          padding: const EdgeInsets.all(40.0),
-          width: 100,
-          color: Colors.white,
-        ),
+        Image.asset('assets/images/unnamed.png', width: 80, height: 80,),
         const SizedBox(height: 30),
         Container(
           alignment: Alignment.centerLeft,

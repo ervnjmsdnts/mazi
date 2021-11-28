@@ -6,7 +6,7 @@ class LocationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return new WillPopScope(
+    return WillPopScope(
       child:
       Scaffold(
         resizeToAvoidBottomInset: false,
@@ -14,7 +14,7 @@ class LocationScreen extends StatelessWidget {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
 
-          children: [
+          children: const [
             LocationText(),
             SizedBox(height: 50),
             LocationButton(),
@@ -36,15 +36,15 @@ class LocationText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-        constraints: BoxConstraints(minWidth: 100, maxWidth: 250),
+        constraints: const BoxConstraints(minWidth: 100, maxWidth: 250),
         alignment: Alignment.centerLeft,
-        padding: EdgeInsets.only(left: 10.0),
+        padding: const EdgeInsets.only(left: 10.0),
 
         child: Column(
           children: [
             Container(
-              padding: EdgeInsets.only(right: 120.0),
-              child: Icon(Icons.pin_drop, size: 150, color: Colors.white,),
+              padding: const EdgeInsets.only(right: 120.0),
+              child: const Icon(Icons.pin_drop, size: 150, color: Colors.white,),
             ),
 
             Text(
@@ -78,7 +78,7 @@ class LocationButton extends StatefulWidget {
 }
 
 class _LocationButtonState extends State<LocationButton> {
-  var location = new Location();
+  var location = Location();
 
 
   @override
