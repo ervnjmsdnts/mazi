@@ -16,6 +16,7 @@ class Interest(BaseModel):
 class User(models.BaseUser):
     firstName: str
     lastName: str
+    interests: Optional[str] = None
 
 
 class UserCreate(models.BaseUserCreate):
@@ -26,8 +27,6 @@ class UserCreate(models.BaseUserCreate):
 
 class UserUpdate(models.BaseUserUpdate):
     interests: Optional[str]
-    gender: Optional[Gender]
-    avatar: Optional[str]
 
 
 class UserDB(User, models.BaseUserDB):

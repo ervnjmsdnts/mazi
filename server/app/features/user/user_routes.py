@@ -34,22 +34,22 @@ async def confirmation(id: str):
 
 
 @user_router.post("/interest")
-async def createInterest(interest: Interest, user: UserUpdate = Depends(current_user)):
-    interest_data = dict(interest)
+async def createInterest(interests: Interest, user: UserUpdate = Depends(current_user)):
+    interest_data = dict(interests)
     await user_collection.update_one({"id": user.id}, {"$set": interest_data})
 
     return {"message": f"{user.firstName} interests created"}
 
 
 @user_router.get("/interest")
-async def getInterest(user: User = Depends(current_user)):
-    user_interest = await user_collection.find_one({"id": user.id}, {"_id": 0})
+async def getUser(user: User = Depends(current_user)):
+    current_user = await user_collection.find_one({"id": user.id}, {"_id": 0})
 
-    return user_interest
+    return current_user
 
 
-@user_router.put("/gender")
-async def setGender(gender: Gender = Body(..., embed="gender"), user: UserUpdate = Depends(current_user)):
-    await user_collection.update_one({"id": user.id}, {"$set": {"gender": gender.value}})
+# @user_router.put("/gender")
+# async def setGender(gender: Gender = Body(..., embed="gender"), user: UserUpdate = Depends(current_user)):
+#     await user_collection.update_one({"id": user.id}, {"$set": {"gender": gender.value}})
 
-    return {"message": f"{user.firstName}'s gender has been updated"}
+#     return {"message": f"{user.firstName}'s gender has been updated"}
