@@ -33,7 +33,17 @@ app.include_router(user_routes.user_router)
 app.include_router(interest_routes.router)
 
 
-coords_2 = (0,0)
+coords_2 = (0, 0)
+
+
+async def getOtherUsers(userId: UUID):
+    usersLocation = []
+    usersInterest = []
+    async for user in user_collection.find({"id": {"$ne": userId}}):
+        usersLocation.append(user["location"])
+        usersInterest.append(user["interests"])
+
+    return usersLocation, usersInterest
 
 
 @app.websocket("/ws")
@@ -49,10 +59,26 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
 
         while True:
             coordinates = await websocket.receive_json()
-            currentLocation = coordinates['location']
+            currentLocation = coordinates["location"]
             magneticLocation = distance.distance(currentLocation, coords_2).m
-            await user_collection.update_one({"id": UUID(payload["user_id"])}, {"$set":{"location":magneticLocation}})
-            
+            await user_collection.update_one(
+                {"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}}
+            )
+
+            await getOtherUsers(userId=UUID(payload["user_id"]))
+
+            otherLocations, otherInterests = await getOtherUsers(userId=UUID(payload["user_id"]))
+
+            print(otherInterests)
+
+            # for location in otherLocations:
+            #     meters = magneticLocation - location
+
+            #     if meters < 0:
+            #         meters *= -1
+            #     if meters < 250:
+            #         print(f"You are within 250 meters. User with: {location}")
+
     else:
         await websocket.close()
         print("Websocket closed")
