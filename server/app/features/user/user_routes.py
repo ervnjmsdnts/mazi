@@ -4,7 +4,7 @@ import jwt
 from app.core.config import VERIFY_TOKEN_SECRET
 from app.core.db import user_collection
 
-from .user_models import Gender, Interest, User, UserUpdate
+from .user_models import Interest, User, UserUpdate
 from .user_utils import current_user
 
 

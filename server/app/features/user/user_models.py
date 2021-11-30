@@ -17,6 +17,7 @@ class User(models.BaseUser):
     firstName: str
     lastName: str
     interests: List[str] = []
+    location: float = 0.0
 
 
 class UserCreate(models.BaseUserCreate):
@@ -27,6 +28,7 @@ class UserCreate(models.BaseUserCreate):
 
 class UserUpdate(models.BaseUserUpdate):
     interests: Optional[List[str]]
+    location: Optional[float]
 
 
 class UserDB(User, models.BaseUserDB):
