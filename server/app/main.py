@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_users import jwt
 from uuid import UUID
+from geopy.units import meters
 from starlette.websockets import WebSocket
 
 from app.features.user import user_routes
@@ -13,6 +14,7 @@ from app.core.db import user_collection
 
 from app.features.interest import interest_routes
 
+from geopy import distance
 
 app = FastAPI()
 
@@ -31,6 +33,10 @@ app.include_router(user_routes.user_router)
 app.include_router(interest_routes.router)
 
 
+coords_2 = (0,0)
+coords_1 = (13.826969,121.392784)
+
+
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
     schema, param = get_authorization_scheme_param(authorization)
@@ -43,8 +49,21 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
         await websocket.accept()
 
         while True:
-            data = await websocket.receive_text()
-            print(f"Data: {data}")
+            coordinates = await websocket.receive_json()
+            currentLocation = coordinates['location']
+            km = distance.distance(currentLocation, coords_2).m
+            await websocket.send_text(f"Initial Location: {km} ")
+            km2 = distance.distance(coords_1, coords_2).m
+            await websocket.send_text(f"Initial Location other: {km2}")
+            if(km2 < km):
+                km3 = km - km2
+            else:
+                km3 = km2 - km
+            if(km > km2 + 250):
+                await websocket.send_text(f"Location too far, {int(km3)} meters")
+            else:
+                await websocket.send_text(f"Location within range, {int(km3)} meters")
+            
 
     else:
         await websocket.close()
