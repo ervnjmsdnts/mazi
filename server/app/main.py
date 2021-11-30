@@ -34,7 +34,6 @@ app.include_router(interest_routes.router)
 
 
 coords_2 = (0,0)
-coords_1 = (13.826969,121.392784)
 
 
 @app.websocket("/ws")
@@ -51,20 +50,9 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
         while True:
             coordinates = await websocket.receive_json()
             currentLocation = coordinates['location']
-            km = distance.distance(currentLocation, coords_2).m
-            await websocket.send_text(f"Initial Location: {km} ")
-            km2 = distance.distance(coords_1, coords_2).m
-            await websocket.send_text(f"Initial Location other: {km2}")
-            if(km2 < km):
-                km3 = km - km2
-            else:
-                km3 = km2 - km
-            if(km > km2 + 250):
-                await websocket.send_text(f"Location too far, {int(km3)} meters")
-            else:
-                await websocket.send_text(f"Location within range, {int(km3)} meters")
+            magneticLocation = distance.distance(currentLocation, coords_2).m
+            await user_collection.update_one({"id": UUID(payload["user_id"])}, {"$set":{"location":magneticLocation}})
             
-
     else:
         await websocket.close()
         print("Websocket closed")
