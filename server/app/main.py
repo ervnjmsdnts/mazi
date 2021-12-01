@@ -5,6 +5,7 @@ from fastapi_users import jwt
 from uuid import UUID
 from geopy.units import meters
 from starlette.websockets import WebSocket
+from app.features import interest
 
 from app.features.user import user_routes
 from app.features.user.user_utils import fastapi_users, jwt_authentication
@@ -38,13 +39,17 @@ coords_2 = (0, 0)
 
 async def getOtherUsers(userId: UUID):
     usersLocation = []
-    usersInterest = []
     async for user in user_collection.find({"id": {"$ne": userId}}):
         usersLocation.append(user["location"])
-        usersInterest.append(user["interests"])
 
-    return usersLocation, usersInterest
+    return usersLocation
 
+async def getSpecificUsers(commonLocation):
+    commonInterest = []
+    async for user in user_collection.find({"location": {"$eq": commonLocation}}):
+        commonInterest.append(user["interests"])
+
+    return commonInterest
 
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
@@ -61,23 +66,28 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
             coordinates = await websocket.receive_json()
             currentLocation = coordinates["location"]
             magneticLocation = distance.distance(currentLocation, coords_2).m
-            await user_collection.update_one(
-                {"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}}
-            )
-
+            await user_collection.update_one({"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}})
+            
             await getOtherUsers(userId=UUID(payload["user_id"]))
 
-            otherLocations, otherInterests = await getOtherUsers(userId=UUID(payload["user_id"]))
+            otherLocations = await getOtherUsers(userId=UUID(payload["user_id"]))
 
-            print(otherInterests)
+            for location in otherLocations:
+                  meters = magneticLocation - location
 
-            # for location in otherLocations:
-            #     meters = magneticLocation - location
-
-            #     if meters < 0:
-            #         meters *= -1
-            #     if meters < 250:
-            #         print(f"You are within 250 meters. User with: {location}")
+                  if meters < 0:
+                      meters *= -1
+                  if meters < 250:
+                      await getSpecificUsers(commonLocation=(location))
+                      otherInterests = await getSpecificUsers(commonLocation=(location))
+                      userInterests = set(user["interests"])
+                      otherInterests_list = otherInterests[0][0:]
+                      list1_set = set(otherInterests_list)
+                      test = userInterests.intersection(list1_set)
+                      isNotEmpty = (len(test) != 0)
+                      if isNotEmpty:
+                        await websocket.send_text(f"Common interests are: {str(test)}")
+                        await websocket.send_text(f"You are within 250 meters. User with: {location}")
 
     else:
         await websocket.close()
