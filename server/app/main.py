@@ -4,6 +4,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_users import jwt
 from uuid import UUID
 from geopy.units import meters
+from pydantic.types import Json
 from starlette.websockets import WebSocket
 from app.features import interest
 
@@ -16,7 +17,7 @@ from app.core.db import user_collection
 from app.features.interest import interest_routes
 
 from geopy import distance
-
+import json
 app = FastAPI()
 
 origins = ["http://localhost:3000", "http://localhost:8000"]
@@ -51,6 +52,16 @@ async def getSpecificUsers(commonLocation):
 
     return commonInterest
 
+async def getUsersInfo(commonLocation):
+    usersInfo = []
+    async for user in user_collection.find({"location": {"$eq": commonLocation}}, {"_id":0, "id":0}):
+        usersInfo.append(user)
+
+    return usersInfo
+
+def objDict(obj):
+    return obj.__dict__
+
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
     schema, param = get_authorization_scheme_param(authorization)
@@ -77,18 +88,19 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
 
                   if meters < 0:
                       meters *= -1
-                  if meters < 250:
+                  if meters > 250:
                       await getSpecificUsers(commonLocation=(location))
                       otherInterests = await getSpecificUsers(commonLocation=(location))
                       userInterests = set(user["interests"])
                       otherInterests_list = otherInterests[0][0:]
                       list1_set = set(otherInterests_list)
                       test = userInterests.intersection(list1_set)
-                      isNotEmpty = (len(test) != 0)
+                      isNotEmpty = (len(test) >= 2)
                       if isNotEmpty:
-                        await websocket.send_text(f"Common interests are: {str(test)}")
-                        await websocket.send_text(f"You are within 250 meters. User with: {location}")
-
+                        await getUsersInfo(commonLocation=(location))
+                        otherUsersInfo = await getUsersInfo(commonLocation=(location))
+                        await websocket.send_json(json.dumps( otherUsersInfo, default=objDict))
+                        
     else:
         await websocket.close()
         print("Websocket closed")
