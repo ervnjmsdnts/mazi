@@ -1,7 +1,3 @@
-// To parse this JSON data, do
-//
-//     final token = tokenFromJson(jsonString);
-
 import 'dart:convert';
 
 Token tokenFromJson(String str) => Token.fromJson(json.decode(str));
@@ -18,12 +14,12 @@ class Token {
   String tokenType;
 
   factory Token.fromJson(Map<String, dynamic> json) => Token(
-    accessToken: json["access_token"],
-    tokenType: json["token_type"],
-  );
+        accessToken: json["access_token"],
+        tokenType: json["token_type"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "access_token": accessToken,
-    "token_type": tokenType,
-  };
+        "access_token": accessToken,
+        "token_type": tokenType,
+      };
 }

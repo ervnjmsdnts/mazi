@@ -18,6 +18,7 @@ from app.features.interest import interest_routes
 
 from geopy import distance
 import json
+
 app = FastAPI()
 
 origins = ["http://localhost:3000", "http://localhost:8000"]
@@ -45,6 +46,7 @@ async def getOtherUsers(userId: UUID):
 
     return usersLocation
 
+
 async def getSpecificUsers(commonLocation):
     commonInterest = []
     async for user in user_collection.find({"location": {"$eq": commonLocation}}):
@@ -52,15 +54,18 @@ async def getSpecificUsers(commonLocation):
 
     return commonInterest
 
+
 async def getUsersInfo(commonLocation):
     usersInfo = []
-    async for user in user_collection.find({"location": {"$eq": commonLocation}}, {"_id":0, "id":0}):
+    async for user in user_collection.find({"location": {"$eq": commonLocation}}, {"_id": 0, "id": 0}):
         usersInfo.append(user)
 
     return usersInfo
 
+
 def objDict(obj):
     return obj.__dict__
+
 
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
@@ -76,31 +81,34 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
         while True:
             coordinates = await websocket.receive_json()
             currentLocation = coordinates["location"]
+            print(currentLocation)
             magneticLocation = distance.distance(currentLocation, coords_2).m
-            await user_collection.update_one({"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}})
-            
+            await user_collection.update_one(
+                {"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}}
+            )
+
             await getOtherUsers(userId=UUID(payload["user_id"]))
 
             otherLocations = await getOtherUsers(userId=UUID(payload["user_id"]))
 
             for location in otherLocations:
-                  meters = magneticLocation - location
+                meters = magneticLocation - location
 
-                  if meters < 0:
-                      meters *= -1
-                  if meters > 250:
-                      await getSpecificUsers(commonLocation=(location))
-                      otherInterests = await getSpecificUsers(commonLocation=(location))
-                      userInterests = set(user["interests"])
-                      otherInterests_list = otherInterests[0][0:]
-                      list1_set = set(otherInterests_list)
-                      test = userInterests.intersection(list1_set)
-                      isNotEmpty = (len(test) >= 2)
-                      if isNotEmpty:
+                if meters < 0:
+                    meters *= -1
+                if meters < 250:
+                    print("found")
+                    await getSpecificUsers(commonLocation=(location))
+                    otherInterests = await getSpecificUsers(commonLocation=(location))
+                    userInterests = set(user["interests"])
+                    otherInterests_list = otherInterests[0][0:]
+                    list1_set = set(otherInterests_list)
+                    test = userInterests.intersection(list1_set)
+                    isNotEmpty = len(test) >= 2
+                    if isNotEmpty:
                         await getUsersInfo(commonLocation=(location))
                         otherUsersInfo = await getUsersInfo(commonLocation=(location))
-                        await websocket.send_json(json.dumps( otherUsersInfo, default=objDict))
-                        
+                        await websocket.send_json(json.dumps(otherUsersInfo, default=objDict))
     else:
         await websocket.close()
         print("Websocket closed")

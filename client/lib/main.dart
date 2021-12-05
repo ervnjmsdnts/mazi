@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
-import 'create_acc.dart';
-void main() {
+import 'package:get/get.dart';
+import 'package:mazi/const/app_colors.dart';
+import 'package:mazi/const/app_font.dart';
+import 'package:mazi/const/app_routes.dart';
+import 'package:mazi/views/pages/auth/intro_page.dart';
+import 'package:mazi/views/pages/auth/login_page.dart';
+import 'package:mazi/views/pages/auth/register_page.dart';
+import 'package:mazi/views/pages/enable_location_page.dart';
+import 'package:mazi/views/pages/home_page.dart';
+import 'package:mazi/views/pages/interest_page.dart';
+import 'package:mazi/views/pages/search_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+String? token;
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  SharedPreferences pref = await SharedPreferences.getInstance();
+  token = pref.getString("token");
   runApp(const MyApp());
 }
 
@@ -10,156 +26,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
+      title: "Mazi Application",
       debugShowCheckedModeBanner: false,
-      title: 'Exploration',
-      theme: ThemeData(primarySwatch: Colors.pink),
-      home: const Signing(),
-    );
-  }
-}
-
-class Signing extends StatelessWidget{
-  const Signing({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF041B2D),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: const [
-          Welcoming(),
-          LoginButton(),
-          CreateAccountButton(),
-        ],
-      ),
-    );
-  }
-}
-
-class Welcoming extends StatelessWidget{
-  const Welcoming({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 14,),
-        const Text('Welcome',
-          style: TextStyle(
-            fontSize: 20,
-            color: Colors.white,
-            fontFamily: 'Chivo-Bold'
-          ),
+      initialRoute: token == null ? AppRoutes.introPage : AppRoutes.homePage,
+      getPages: [
+        GetPage(name: AppRoutes.introPage, page: () => const IntroPage()),
+        GetPage(name: AppRoutes.loginPage, page: () => const LoginPage()),
+        GetPage(name: AppRoutes.registerPage, page: () => const RegisterPage()),
+        GetPage(
+          name: AppRoutes.enableLocationPage,
+          page: () => EnableLocationPage(),
         ),
-        const Text('to',
-          style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'Chivo-Bold'
-          ),
-        ),
-        const SizedBox(height: 14,),
-        Container(
-          child: Image.asset('assets/images/unnamed.png',
-          width: 200,
-            height: 200,
-          ),
-        ),
-        const SizedBox(height: 14,),
-        const Text('The Future of',
-          style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'Chivo-Bold'
-          ),
-        ),
-        const Text('Dating',
-          style: TextStyle(
-              fontSize: 20,
-              color: Colors.white,
-              fontFamily: 'Chivo-Bold'
-          ),
-        ),
+        GetPage(name: AppRoutes.homePage, page: () => HomePage()),
+        GetPage(name: AppRoutes.interestPage, page: () => InterestPage()),
+        GetPage(name: AppRoutes.searchPage, page: () => const SearchPage()),
       ],
-    );
-  }
-}
-
-class LoginButton extends StatelessWidget{
-  const LoginButton({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-        children: [
-          const SizedBox(height: 200,),
-          TextButton(
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF428CD4),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 120)
-              ),
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) {
-                          return const LoginScreen();
-                        }
-                  ),
-                );
-              },
-              child: const Text(
-                'Log In',
-                style: TextStyle(
-                  fontFamily: "Chivo-Light",
-                  color: Colors.white,
-                  fontSize: 17,
-                ),
-              ),
-          )
-        ],
-    );
-  }
-}
-
-class CreateAccountButton extends StatelessWidget{
-  const CreateAccountButton({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-        children: [
-          const SizedBox(height: 14,),
-          TextButton(
-            style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF9D91D6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 82)
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) {
-                      return const CreateAccount();
-                    }
-                ),
-              );
-            },
-            child: const Text(
-              'Create Account',
-              style: TextStyle(
-                fontFamily: "Chivo-Light",
-                color: Colors.white,
-                fontSize: 17,
-              ),
-            ),
-          )
-        ],
+      theme: ThemeData(
+        fontFamily: AppFonts.light,
+        scaffoldBackgroundColor: const Color(AppColors.primary),
+      ),
     );
   }
 }
