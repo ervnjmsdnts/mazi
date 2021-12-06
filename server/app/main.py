@@ -63,10 +63,6 @@ async def getUsersInfo(commonLocation):
     return usersInfo
 
 
-def objDict(obj):
-    return obj.__dict__
-
-
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
     schema, param = get_authorization_scheme_param(authorization)
@@ -96,7 +92,7 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
 
                 if meters < 0:
                     meters *= -1
-                if meters < 250:
+                if meters > 250:
                     print("found")
                     await getSpecificUsers(commonLocation=(location))
                     otherInterests = await getSpecificUsers(commonLocation=(location))
@@ -108,7 +104,9 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
                     if isNotEmpty:
                         await getUsersInfo(commonLocation=(location))
                         otherUsersInfo = await getUsersInfo(commonLocation=(location))
-                        await websocket.send_json(json.dumps(otherUsersInfo, default=objDict))
+                        await websocket.send_json(otherUsersInfo)
+                else:
+                    print("No user found")
     else:
         await websocket.close()
         print("Websocket closed")

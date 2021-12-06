@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mazi/const/app_colors.dart';
 import 'package:mazi/const/app_images.dart';
-import 'package:mazi/controllers/location_controller.dart';
 import 'package:mazi/controllers/socket_controller.dart';
 import 'package:mazi/views/widgets/custom_texts.dart';
 import 'package:mazi/views/widgets/custom_wave.dart';
@@ -17,22 +16,6 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final SocketController socketController =
       Get.put<SocketController>(SocketController());
-  final LocationController locationController =
-      Get.put<LocationController>(LocationController());
-
-  @override
-  void initState() {
-    super.initState();
-    socketController.startStream();
-    locationController.subscribeStream();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    socketController.closeStream();
-    locationController.unsubscribeStream();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +54,14 @@ class _SearchPageState extends State<SearchPage> {
                   text: "Searching . . .",
                   fontSize: 20,
                 ),
+                Obx(
+                  () => Text(
+                    "${socketController.matchUsers[0]["email"]}",
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                )
               ],
             ),
           ),
