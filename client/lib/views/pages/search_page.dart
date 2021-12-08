@@ -3,8 +3,11 @@ import 'package:get/get.dart';
 import 'package:mazi/const/app_colors.dart';
 import 'package:mazi/const/app_images.dart';
 import 'package:mazi/controllers/socket_controller.dart';
+import 'package:mazi/views/widgets/custom_buttons.dart';
 import 'package:mazi/views/widgets/custom_texts.dart';
 import 'package:mazi/views/widgets/custom_wave.dart';
+import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
+import 'package:staggered_grid_view_flutter/widgets/staggered_tile.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key}) : super(key: key);
@@ -33,20 +36,42 @@ class _SearchPageState extends State<SearchPage> {
                 Expanded(
                   child: Stack(
                     alignment: Alignment.center,
-                    children: const <Widget>[
-                      SizedBox(
+                    children: <Widget>[
+                      const SizedBox(
                         width: 500,
                         height: 500,
                         child: WaterRipple(),
                       ),
-                      CircleAvatar(
+                      const CircleAvatar(
                         radius: 48,
                         backgroundColor: Color(AppColors.accentPinky),
                         child: Icon(
                           Icons.person,
                           size: 48,
                         ),
-                      )
+                      ),
+                      Obx(
+                        () => StaggeredGridView.count(
+                          crossAxisCount: 4,
+                          children: List.generate(
+                            socketController.matchUsers.length,
+                            (index) => Center(
+                              child: CircleAvatar(
+                                radius: 12,
+                                child: IconButton(
+                                  onPressed: () {},
+                                  icon: const Icon(null),
+                                ),
+                              ),
+                            ),
+                          ),
+                          staggeredTiles: const [
+                            StaggeredTile.count(2, 2),
+                            StaggeredTile.count(2, 1),
+                            StaggeredTile.count(1, 2),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -54,14 +79,6 @@ class _SearchPageState extends State<SearchPage> {
                   text: "Searching . . .",
                   fontSize: 20,
                 ),
-                Obx(
-                  () => Text(
-                    "${socketController.matchUsers[0]["email"]}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
-                )
               ],
             ),
           ),

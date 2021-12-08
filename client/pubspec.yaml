@@ -18,6 +18,7 @@ dependencies:
   get: ^4.3.8
   location: ^4.3.0
   web_socket_channel: ^2.1.0
+  staggered_grid_view_flutter: ^0.0.4
 
 dev_dependencies:
   flutter_test:
