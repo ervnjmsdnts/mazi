@@ -9,6 +9,7 @@ import 'package:mazi/views/pages/auth/register_page.dart';
 import 'package:mazi/views/pages/enable_location_page.dart';
 import 'package:mazi/views/pages/home_page.dart';
 import 'package:mazi/views/pages/interest_page.dart';
+import 'package:mazi/views/pages/match_page.dart';
 import 'package:mazi/views/pages/search_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: AppRoutes.homePage, page: () => HomePage()),
         GetPage(name: AppRoutes.interestPage, page: () => InterestPage()),
         GetPage(name: AppRoutes.searchPage, page: () => const SearchPage()),
+        GetPage(name: AppRoutes.matchPage, page: () => const MatchPage()),
       ],
       theme: ThemeData(
         fontFamily: AppFonts.light,

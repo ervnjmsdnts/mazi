@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mazi/const/app_colors.dart';
 import 'package:mazi/const/app_images.dart';
+import 'package:mazi/const/app_routes.dart';
 import 'package:mazi/controllers/socket_controller.dart';
-import 'package:mazi/views/widgets/custom_buttons.dart';
 import 'package:mazi/views/widgets/custom_texts.dart';
 import 'package:mazi/views/widgets/custom_wave.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
@@ -59,7 +59,10 @@ class _SearchPageState extends State<SearchPage> {
                               child: CircleAvatar(
                                 radius: 12,
                                 child: IconButton(
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    socketController.channel!.sink.close();
+                                    Get.toNamed(AppRoutes.matchPage);
+                                  },
                                   icon: const Icon(null),
                                 ),
                               ),

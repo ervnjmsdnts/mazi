@@ -6,4 +6,5 @@ class AppRoutes {
   static const String enableLocationPage = "/enable_location";
   static const String interestPage = "/interest";
   static const String searchPage = "/search";
+  static const String matchPage = "/match";
 }
