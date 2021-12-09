@@ -62,6 +62,16 @@ async def getUsersInfo(commonLocation):
 
     return usersInfo
 
+#async def getUsersLike(commonLocation):
+#    usersPing = []
+#    usersEmail = []
+#    async for user in user_collection.find({"location": {"$eq": commonLocation}}):
+#        usersPing.append(user["like"])
+#        usersEmail.append(user["email"])
+#
+#    return usersPing, usersEmail
+    
+
 
 @app.websocket("/ws")
 async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(...)):
@@ -92,7 +102,7 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
 
                 if meters < 0:
                     meters *= -1
-                if meters > 250:
+                if meters <= 250:
                     print("found")
                     await getSpecificUsers(commonLocation=(location))
                     otherInterests = await getSpecificUsers(commonLocation=(location))
@@ -107,6 +117,41 @@ async def websocketEndpoint(websocket: WebSocket, authorization: str = Header(..
                         await websocket.send_json(otherUsersInfo)
                 else:
                     print("No user found")
+                
+
+            
     else:
         await websocket.close()
         print("Websocket closed")
+
+class ConnectionManager:
+    def __init__(self):
+        self.connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.connections.append(websocket)
+
+    async def broadcast(self, data: str):
+        for connection in self.connections:
+            await connection.send_text(data)
+
+
+manager = ConnectionManager()
+
+@app.websocket_route("/ws")
+async def websocket_endpoint(websocket: WebSocket, authorization: str = Header(...)):
+    schema, param = get_authorization_scheme_param(authorization)
+
+    payload = jwt.decode_jwt(param, TOKEN_SECRET, audience=["fastapi-users:auth"])
+
+    user = await user_collection.find_one({"id": UUID(payload["user_id"])})
+    userEmail = user["email"]
+
+    if user:
+        websocket.accept()
+        await manager.connect(websocket)
+        
+        while True:
+            pingedUserEmail = await websocket.receive_text()
+            await manager.broadcast(f"{userEmail}, you have been pinged by {pingedUserEmail}")
