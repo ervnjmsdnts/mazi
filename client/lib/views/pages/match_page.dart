@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:mazi/const/app_colors.dart';
 import 'package:mazi/const/app_images.dart';
+import 'package:mazi/controllers/match_controller.dart';
 import 'package:mazi/views/widgets/custom_texts.dart';
 
 class MatchPage extends StatelessWidget {
-  const MatchPage({Key? key}) : super(key: key);
+  final MatchController matchController =
+      Get.put<MatchController>(MatchController());
+  MatchPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

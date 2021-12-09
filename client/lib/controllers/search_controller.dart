@@ -2,13 +2,14 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import "package:get/get.dart";
+import 'package:mazi/const/app_routes.dart';
 import 'package:mazi/const/app_urls.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mazi/utils/auth_utils.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:location/location.dart';
 
-class SocketController extends GetxController {
+class SearchController extends GetxController {
   WebSocketChannel? channel;
   Location location = Location();
   RxList matchUsers = [].obs;
@@ -16,9 +17,9 @@ class SocketController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    getToken().then((token) {
+    AuthUtil().getToken().then((token) {
       channel = IOWebSocketChannel.connect(
-        Uri.parse(AppUrls.websocketUrl),
+        Uri.parse(AppUrls.searchUrl),
         headers: {"Authorization": "Bearer $token"},
       );
       location.onLocationChanged.listen((locationData) {
@@ -47,8 +48,8 @@ class SocketController extends GetxController {
     debugPrint("Connection closed");
   }
 
-  Future<String?> getToken() async {
-    final SharedPreferences pref = await SharedPreferences.getInstance();
-    return pref.getString("token");
+  void matchUser(int index) {
+    channel!.sink.close();
+    Get.toNamed(AppRoutes.matchPage, arguments: matchUsers[index]["email"]);
   }
 }

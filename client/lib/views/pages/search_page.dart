@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mazi/const/app_colors.dart';
 import 'package:mazi/const/app_images.dart';
-import 'package:mazi/const/app_routes.dart';
-import 'package:mazi/controllers/socket_controller.dart';
+import 'package:mazi/controllers/search_controller.dart';
 import 'package:mazi/views/widgets/custom_texts.dart';
 import 'package:mazi/views/widgets/custom_wave.dart';
 import 'package:staggered_grid_view_flutter/widgets/staggered_grid_view.dart';
@@ -17,8 +16,8 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  final SocketController socketController =
-      Get.put<SocketController>(SocketController());
+  final SearchController searchController =
+      Get.put<SearchController>(SearchController());
 
   @override
   Widget build(BuildContext context) {
@@ -54,15 +53,13 @@ class _SearchPageState extends State<SearchPage> {
                         () => StaggeredGridView.count(
                           crossAxisCount: 4,
                           children: List.generate(
-                            socketController.matchUsers.length,
+                            searchController.matchUsers.length,
                             (index) => Center(
                               child: CircleAvatar(
                                 radius: 12,
                                 child: IconButton(
-                                  onPressed: () {
-                                    socketController.channel!.sink.close();
-                                    Get.toNamed(AppRoutes.matchPage);
-                                  },
+                                  onPressed: () =>
+                                      searchController.matchUser(index),
                                   icon: const Icon(null),
                                 ),
                               ),

@@ -8,4 +8,9 @@ class AuthUtil {
     pref.clear();
     Get.offAllNamed(AppRoutes.introPage);
   }
+
+  Future<String?> getToken() async {
+    final SharedPreferences pref = await SharedPreferences.getInstance();
+    return pref.getString("token");
+  }
 }

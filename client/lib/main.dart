@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: AppRoutes.homePage, page: () => HomePage()),
         GetPage(name: AppRoutes.interestPage, page: () => InterestPage()),
         GetPage(name: AppRoutes.searchPage, page: () => const SearchPage()),
-        GetPage(name: AppRoutes.matchPage, page: () => const MatchPage()),
+        GetPage(name: AppRoutes.matchPage, page: () => MatchPage()),
       ],
       theme: ThemeData(
         fontFamily: AppFonts.light,

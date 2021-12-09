@@ -1,4 +1,5 @@
 class AppUrls {
   static const url = "http://10.0.2.2:8000";
-  static const websocketUrl = "ws://10.0.2.2:8000/ws";
+  static const searchUrl = "ws://10.0.2.2:8000/ws";
+  static const matchUrl = "ws://10.0.2.2:8000/ws/match";
 }
