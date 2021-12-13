@@ -27,7 +27,7 @@ class User {
   String firstName;
   String lastName;
   List<String> interests;
-  double location;
+  double? location;
 
   factory User.fromJson(Map<String, dynamic> json) => User(
         id: json["id"],
@@ -39,7 +39,7 @@ class User {
         firstName: json["firstName"],
         lastName: json["lastName"],
         interests: List<String>.from(json["interests"].map((x) => x)),
-        location: json["location"].toDouble(),
+        location: json["location"]?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {

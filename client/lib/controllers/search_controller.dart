@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
-import "package:get/get.dart";
+import 'package:get/get.dart';
 import 'package:mazi/const/app_routes.dart';
 import 'package:mazi/const/app_urls.dart';
 import 'package:mazi/utils/auth_utils.dart';
@@ -13,6 +13,7 @@ class SearchController extends GetxController {
   WebSocketChannel? channel;
   Location location = Location();
   RxList matchUsers = [].obs;
+  RxList usersThatPinged = [].obs;
 
   @override
   void onInit() {
@@ -22,8 +23,9 @@ class SearchController extends GetxController {
         Uri.parse(AppUrls.searchUrl),
         headers: {"Authorization": "Bearer $token"},
       );
-      location.onLocationChanged.listen((locationData) {
-        channel!.sink.add(json.encode({
+      StreamSubscription<LocationData> locationSucbscription =
+          location.onLocationChanged.listen((locationData) {
+        channel?.sink.add(json.encode({
           "location": [locationData.latitude, locationData.longitude]
         }));
       });
@@ -37,6 +39,8 @@ class SearchController extends GetxController {
             matchUsers.add(user);
           }
         }
+      }, onDone: () {
+        locationSucbscription.cancel();
       });
     });
   }
@@ -44,12 +48,12 @@ class SearchController extends GetxController {
   @override
   void onClose() {
     super.onClose();
-    channel!.sink.close();
-    debugPrint("Connection closed");
+    channel?.sink.close();
   }
 
-  void matchUser(int index) {
-    channel!.sink.close();
-    Get.toNamed(AppRoutes.matchPage, arguments: matchUsers[index]["email"]);
+  void pingUser(int index) {
+    var pingedUserEmail = matchUsers[index]["email"];
+    channel?.sink.add(json.encode({"pingedUserEmail": pingedUserEmail}));
+    // Get.toNamed(AppRoutes.matchPage, arguments: matchUsers[index]["email"]);
   }
 }

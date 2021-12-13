@@ -57,9 +57,10 @@ class _SearchPageState extends State<SearchPage> {
                             (index) => Center(
                               child: CircleAvatar(
                                 radius: 12,
+                                backgroundColor: const Color(AppColors.purply),
                                 child: IconButton(
                                   onPressed: () =>
-                                      searchController.matchUser(index),
+                                      searchController.pingUser(index),
                                   icon: const Icon(null),
                                 ),
                               ),
