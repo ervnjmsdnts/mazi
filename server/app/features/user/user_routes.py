@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends
 import jwt
 
 from app.core.config import VERIFY_TOKEN_SECRET

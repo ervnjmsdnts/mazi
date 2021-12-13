@@ -10,6 +10,7 @@ client = AsyncIOMotorClient(DATABASE_URL, uuidRepresentation="standard")
 db = client.mazi
 user_collection = db.users
 interest_collection = db.interest
+room_collection = db.room
 
 
 async def getUserDb():

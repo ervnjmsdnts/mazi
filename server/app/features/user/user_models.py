@@ -17,7 +17,8 @@ class User(models.BaseUser):
     firstName: str
     lastName: str
     interests: List[str] = []
-    location: float = 0.0
+    location: Optional[float] = None
+    # ping: bool = False
 
 
 class UserCreate(models.BaseUserCreate):
@@ -28,7 +29,8 @@ class UserCreate(models.BaseUserCreate):
 
 class UserUpdate(models.BaseUserUpdate):
     interests: Optional[List[str]]
-    location: Optional[float]
+    location: Optional[float] = None
+    # ping: Optional[bool]
 
 
 class UserDB(User, models.BaseUserDB):

@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Header
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_users import jwt
@@ -13,7 +14,7 @@ from app.core.db import user_collection
 
 from app.features.interest import interest_routes
 
-from geopy import distance
+from geopy.distance import distance
 import json
 
 app = FastAPI()
@@ -33,128 +34,123 @@ app.include_router(user_routes.user_router)
 app.include_router(interest_routes.router)
 
 
-coords_2 = (0, 0)
+class WebSocketUser(BaseModel):
+    email: str
+    socket: WebSocket
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
-async def getOtherUsers(userId: UUID):
-    usersLocation = []
-    async for user in user_collection.find({"id": {"$ne": userId}}):
-        usersLocation.append(user["location"])
-
-    return usersLocation
-
-
-async def getSpecificUsers(commonLocation):
-    commonInterest = []
-    async for user in user_collection.find({"location": {"$eq": commonLocation}}):
-        commonInterest.append(user["interests"])
-
-    return commonInterest
-
-
-async def getUsersInfo(commonLocation):
-    usersInfo = []
-    async for user in user_collection.find({"location": {"$eq": commonLocation}}, {"_id": 0, "id": 0}):
-        usersInfo.append(user)
-
-    return usersInfo
-
-
-# async def getUsersLike(commonLocation):
-#    usersPing = []
-#    usersEmail = []
-#    async for user in user_collection.find({"location": {"$eq": commonLocation}}):
-#        usersPing.append(user["like"])
-#        usersEmail.append(user["email"])
-#
-#    return usersPing, usersEmail
-
-
-@app.websocket("/ws")
-async def websocket_search(websocket: WebSocket, authorization: str = Header(...)):
-    schema, param = get_authorization_scheme_param(authorization)
-
-    payload = jwt.decode_jwt(param, TOKEN_SECRET, audience=["fastapi-users:auth"])
-
-    user = await user_collection.find_one({"id": UUID(payload["user_id"])})
-
-    if user:
-        await websocket.accept()
-
-        while True:
-            coordinates = await websocket.receive_json()
-            currentLocation = coordinates["location"]
-            print(currentLocation)
-            magneticLocation = distance.distance(currentLocation, coords_2).m
-            await user_collection.update_one(
-                {"id": UUID(payload["user_id"])}, {"$set": {"location": magneticLocation}}
-            )
-
-            await getOtherUsers(userId=UUID(payload["user_id"]))
-
-            otherLocations = await getOtherUsers(userId=UUID(payload["user_id"]))
-
-            for location in otherLocations:
-                meters = magneticLocation - location
-
-                if meters < 0:
-                    meters *= -1
-                if meters <= 250:
-                    print("found")
-                    await getSpecificUsers(commonLocation=(location))
-                    otherInterests = await getSpecificUsers(commonLocation=(location))
-                    userInterests = set(user["interests"])
-                    otherInterests_list = otherInterests[0][0:]
-                    list1_set = set(otherInterests_list)
-                    test = userInterests.intersection(list1_set)
-                    isNotEmpty = len(test) >= 2
-                    if isNotEmpty:
-                        await getUsersInfo(commonLocation=(location))
-                        otherUsersInfo = await getUsersInfo(commonLocation=(location))
-                        await websocket.send_json(otherUsersInfo)
-                else:
-                    print("No user found")
-
-    else:
-        await websocket.close()
-        print("Websocket closed")
-
-
-class ConnectionManager:
+class BaseManager:
     def __init__(self):
-        self.connections: list[WebSocket] = []
+        self.connections: list[WebSocketUser] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, user_email):
         await websocket.accept()
-        self.connections.append(websocket)
+        print(f"User with email: {user_email} has connected")
+        self.connections.append(WebSocketUser(socket=websocket, email=user_email))
 
+    async def disconnect(self, websocket: WebSocket, user_email):
+        await websocket.close(code=1000)
+        print(f"User with email: {user_email} has disconnected")
+        self.connections.remove(WebSocketUser(socket=websocket, email=user_email))
+
+
+class SearchManager(BaseManager):
+    async def send_ping(self, user_email: str, websocket: WebSocket):
+        await websocket.send_text(user_email)
+
+
+# TODO conditional connection
+class MatchManager(BaseManager):
     async def broadcast(self, data: str):
         for connection in self.connections:
             await connection.send_text(data)
 
-    async def disconnect(self, websocket: WebSocket):
-        self.connections.remove(websocket)
+
+search_manager = SearchManager()
+match_manager = MatchManager()
 
 
-manager = ConnectionManager()
-
-
-@app.websocket("/ws/match")
-async def websocket_ping(websocket: WebSocket, authorization: str = Header(...)):
-    schema, param = get_authorization_scheme_param(authorization)
+async def getUserFromToken(token: str):
+    schema, param = get_authorization_scheme_param(token)
 
     payload = jwt.decode_jwt(param, TOKEN_SECRET, audience=["fastapi-users:auth"])
 
-    user = await user_collection.find_one({"id": UUID(payload["user_id"])})
-    userEmail = user["email"]
+    user = await user_collection.find_one({"id": UUID(payload["user_id"])}, {"_id": 0})
+
+    return user
+
+
+async def getOtherUsersLocationAndInterest(user_id):
+    other_users_location = []
+    other_users_interest = []
+    async for user in user_collection.find({"id": {"$ne": user_id}}):
+        other_users_location.append(user["location"])
+        other_users_interest.append(user["interests"])
+
+    return other_users_location, set(other_users_interest[0][0:])
+
+
+async def getUsersFromLocation(location, user_id):
+    users = []
+    async for user in user_collection.find({"location": {"$eq": location, "$ne": user_id}}, {"_id": 0, "id": 0}):
+        users.append(user)
+
+    return users
+
+
+def hasLocation(data):
+    return "location" in data
+
+
+@app.websocket("/ws/search")
+async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...)):
+    user = await getUserFromToken(authorization)
 
     if user:
-        await manager.connect(websocket)
+        await search_manager.connect(websocket, user_email=user["email"])
 
         while True:
             try:
-                pingedUserEmail = await websocket.receive_text()
-                print(pingedUserEmail)
-                await manager.broadcast(f"{userEmail}, you have been pinged by {pingedUserEmail}")
+                data = await websocket.receive_json()
+                if hasLocation(data):
+                    print("Location")
+                    magnetic_location = distance(data["location"], (0, 0)).m
+                    await user_collection.update_one({"id": user["id"]}, {"$set": {"location": magnetic_location}})
+
+                    other_users_location, other_users_interest = await getOtherUsersLocationAndInterest(
+                        user_id=user["id"]
+                    )
+                    current_user_interest = set(user["interests"])
+                    has_common_interests = len(current_user_interest.intersection(other_users_interest)) >= 2
+                    for location in other_users_location:
+                        if location is not None:
+                            meters = magnetic_location - location
+
+                            if meters < 0:
+                                meters *= -1
+                            if meters > 250 and has_common_interests:
+                                match_users = await getUsersFromLocation(location, user_id=user["id"])
+                                await websocket.send_json(match_users)
+                else:
+                    print(data["pingedUserEmail"])
+
             except WebSocketDisconnect:
-                manager.disconnect(websocket)
+                await user_collection.update_one({"id": user["id"]}, {"$set": {"location": None}})
+                await search_manager.disconnect(websocket, user_email=user["email"])
+
+
+@app.websocket("/ws/match/{room_id}")
+async def matchEndpoint(websocket: WebSocket, room_id: str, authorization: str = Header(...)):
+    user = getUserFromToken(authorization)
+
+    if user:
+        await match_manager.connect(websocket, user_email=user["email"])
+
+        while True:
+            try:
+                pass
+            except WebSocketDisconnect:
+                match_manager.disconnect(websocket, user_email=user["email"])
