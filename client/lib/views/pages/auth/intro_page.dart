@@ -31,7 +31,7 @@ class IntroPage extends StatelessWidget {
               ),
               const RegularText(
                 text: "M  A  Z  I",
-                fontSize: 32,
+                fontSize: 40,
                 color: Color(AppColors.accentPinky),
               ),
               const SizedBox(height: 10),

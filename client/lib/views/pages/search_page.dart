@@ -55,14 +55,28 @@ class _SearchPageState extends State<SearchPage> {
                           children: List.generate(
                             searchController.matchUsers.length,
                             (index) => Center(
-                              child: CircleAvatar(
-                                radius: 12,
-                                backgroundColor: const Color(AppColors.purply),
-                                child: IconButton(
-                                  onPressed: () =>
-                                      searchController.pingUser(index),
-                                  icon: const Icon(null),
-                                ),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (searchController
+                                      .matchUsers[index]["ping"].value) ...[
+                                    const Positioned(
+                                      child: CustomToolTip(),
+                                      top: -32,
+                                    )
+                                  ],
+                                  CircleAvatar(
+                                    radius: 12,
+                                    backgroundColor:
+                                        const Color(AppColors.purply),
+                                    child: IconButton(
+                                      onPressed: () =>
+                                          searchController.pingUser(index),
+                                      icon: const Icon(null),
+                                    ),
+                                  )
+                                ],
                               ),
                             ),
                           ),
@@ -83,6 +97,29 @@ class _SearchPageState extends State<SearchPage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class CustomToolTip extends StatelessWidget {
+  const CustomToolTip({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 50,
+        height: 20,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(AppColors.accentPinky),
+        ),
+        child: const RegularText(
+          textAlign: TextAlign.center,
+          fontSize: 15,
+          text: "Ping",
         ),
       ),
     );

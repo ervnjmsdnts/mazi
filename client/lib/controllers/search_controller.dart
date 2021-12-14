@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:get/get.dart';
-import 'package:mazi/const/app_routes.dart';
 import 'package:mazi/const/app_urls.dart';
 import 'package:mazi/utils/auth_utils.dart';
 import 'package:web_socket_channel/io.dart';
@@ -13,7 +12,6 @@ class SearchController extends GetxController {
   WebSocketChannel? channel;
   Location location = Location();
   RxList matchUsers = [].obs;
-  RxList usersThatPinged = [].obs;
 
   @override
   void onInit() {
@@ -29,14 +27,22 @@ class SearchController extends GetxController {
           "location": [locationData.latitude, locationData.longitude]
         }));
       });
-      channel?.stream.listen((listData) {
-        List listUser = json.decode(listData);
-        for (var user in listUser) {
-          var exist = matchUsers.where(
-            (data) => data["email"] == user["email"],
-          );
-          if (exist.isEmpty) {
-            matchUsers.add(user);
+      channel?.stream.listen((data) {
+        if (data.toString().length > 50) {
+          List listUser = json.decode(data);
+          for (var user in listUser) {
+            var exist = matchUsers.where(
+              (data) => data["email"] == user["email"],
+            );
+            if (exist.isEmpty) {
+              matchUsers.add({"email": user["email"], "ping": false.obs});
+            }
+          }
+        } else {
+          for (var user in matchUsers) {
+            if (user["email"] == data) {
+              user["ping"].value = true;
+            }
           }
         }
       }, onDone: () {
@@ -54,6 +60,5 @@ class SearchController extends GetxController {
   void pingUser(int index) {
     var pingedUserEmail = matchUsers[index]["email"];
     channel?.sink.add(json.encode({"pingedUserEmail": pingedUserEmail}));
-    // Get.toNamed(AppRoutes.matchPage, arguments: matchUsers[index]["email"]);
   }
 }

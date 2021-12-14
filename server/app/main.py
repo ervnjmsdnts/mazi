@@ -15,7 +15,6 @@ from app.core.db import user_collection
 from app.features.interest import interest_routes
 
 from geopy.distance import distance
-import json
 
 app = FastAPI()
 
@@ -58,8 +57,12 @@ class BaseManager:
 
 
 class SearchManager(BaseManager):
-    async def send_ping(self, user_email: str, websocket: WebSocket):
-        await websocket.send_text(user_email)
+    async def send_ping(self, to_user: str, from_user: str):
+        user_socket = None
+        for connection in self.connections:
+            if connection.email == to_user:
+                user_socket = connection.socket
+        await user_socket.send_text(from_user)
 
 
 # TODO conditional connection
@@ -116,7 +119,6 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
             try:
                 data = await websocket.receive_json()
                 if hasLocation(data):
-                    print("Location")
                     magnetic_location = distance(data["location"], (0, 0)).m
                     await user_collection.update_one({"id": user["id"]}, {"$set": {"location": magnetic_location}})
 
@@ -135,7 +137,8 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
                                 match_users = await getUsersFromLocation(location, user_id=user["id"])
                                 await websocket.send_json(match_users)
                 else:
-                    print(data["pingedUserEmail"])
+                    if data["pingedUserEmail"] != user["email"]:
+                        await search_manager.send_ping(from_user=user["email"], to_user=data["pingedUserEmail"])
 
             except WebSocketDisconnect:
                 await user_collection.update_one({"id": user["id"]}, {"$set": {"location": None}})
