@@ -7,14 +7,17 @@ from uuid import UUID
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from app.features.user import user_routes
+from app.features.user.user_models import Room
 from app.features.user.user_utils import fastapi_users, jwt_authentication
 
 from app.core.config import TOKEN_SECRET
-from app.core.db import user_collection
+from app.core.db import user_collection, room_collection
 
 from app.features.interest import interest_routes
 
 from geopy.distance import distance
+from bson import ObjectId
+
 
 app = FastAPI()
 
@@ -64,12 +67,40 @@ class SearchManager(BaseManager):
                 user_socket = connection.socket
         await user_socket.send_text(from_user)
 
-
-# TODO conditional connection
-class MatchManager(BaseManager):
-    async def broadcast(self, data: str):
+    async def send_room(self, to_user: str, from_user: str, room_id):
+        to_user_socket = None
+        from_user_socket = None
+        to_user_detail = await user_collection.find_one({"email": to_user})
+        from_user_detail = await user_collection.find_one({"email": from_user})
         for connection in self.connections:
-            await connection.send_text(data)
+            if connection.email == to_user:
+                to_user_socket = connection.socket
+            if connection.email == from_user:
+                from_user_socket = connection.socket
+        await room_collection.update_one(
+            {"_id": ObjectId(room_id)}, {"$set": {"users": [{**to_user_detail}, {**from_user_detail}]}}
+        )
+        await to_user_socket.send_json({"room_id": room_id})
+        await from_user_socket.send_json({"room_id": room_id})
+
+
+class MatchManager(BaseManager):
+    async def get_distance(self, websocket: WebSocket, data, room_id):
+        locations = []
+        new_distance = None
+        for connection in self.connections:
+            locations.append(data)
+        new_distance = locations[0] - locations[1]
+
+        if new_distance < 0:
+            new_distance *= -1
+
+        print(locations)
+        print(new_distance)
+
+        # await room_collection.update_one({"_id": ObjectId(room_id)}, {"$set": {"distance": new_distance}})
+        # room_distance = await room_collection.find_one({"_id": ObjectId(room_id)})
+        # await websocket.send_json({"distance": room_distance["distance"]})
 
 
 search_manager = SearchManager()
@@ -104,10 +135,6 @@ async def getUsersFromLocation(location, user_id):
     return users
 
 
-def hasLocation(data):
-    return "location" in data
-
-
 @app.websocket("/ws/search")
 async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...)):
     user = await getUserFromToken(authorization)
@@ -118,7 +145,7 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
         while True:
             try:
                 data = await websocket.receive_json()
-                if hasLocation(data):
+                if "location" in data:
                     magnetic_location = distance(data["location"], (0, 0)).m
                     await user_collection.update_one({"id": user["id"]}, {"$set": {"location": magnetic_location}})
 
@@ -136,24 +163,38 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
                             if meters > 250 and has_common_interests:
                                 match_users = await getUsersFromLocation(location, user_id=user["id"])
                                 await websocket.send_json(match_users)
-                else:
+                elif "pingedUserEmail" in data:
                     if data["pingedUserEmail"] != user["email"]:
                         await search_manager.send_ping(from_user=user["email"], to_user=data["pingedUserEmail"])
+                else:
+                    if data["confirmation"]:
+                        empty_room = dict(Room())
+                        new_room = await room_collection.insert_one(empty_room)
+                        await search_manager.send_room(
+                            from_user=user["email"],
+                            to_user=data["matchEmail"],
+                            room_id=str(ObjectId(new_room.inserted_id)),
+                        )
 
             except WebSocketDisconnect:
                 await user_collection.update_one({"id": user["id"]}, {"$set": {"location": None}})
                 await search_manager.disconnect(websocket, user_email=user["email"])
 
+# TODO Put needed functions here for match endpoint
 
 @app.websocket("/ws/match/{room_id}")
-async def matchEndpoint(websocket: WebSocket, room_id: str, authorization: str = Header(...)):
-    user = getUserFromToken(authorization)
+async def matchEndpoint(room_id: str, websocket: WebSocket, authorization: str = Header(...)):
+    user = await getUserFromToken(authorization)
 
     if user:
         await match_manager.connect(websocket, user_email=user["email"])
-
         while True:
             try:
-                pass
+                location_data = await websocket.receive_json()
+                magnetic_location = distance(location_data["location"], (0, 0)).m
+                await user_collection.update_one({"id": user["id"]}, {"$set": {"location": magnetic_location}})
+
+                await match_manager.get_distance(websocket, user["location"], room_id)
+
             except WebSocketDisconnect:
                 match_manager.disconnect(websocket, user_email=user["email"])
