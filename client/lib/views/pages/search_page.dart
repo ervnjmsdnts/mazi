@@ -71,8 +71,10 @@ class _SearchPageState extends State<SearchPage> {
                                     backgroundColor:
                                         const Color(AppColors.purply),
                                     child: IconButton(
-                                      onPressed: () =>
-                                          searchController.pingUser(index),
+                                      onPressed: () => searchController
+                                              .matchUsers[index]["ping"].value
+                                          ? searchController.matchUser(index)
+                                          : searchController.pingUser(index),
                                       icon: const Icon(null),
                                     ),
                                   )
