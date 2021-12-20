@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -34,7 +33,7 @@ class SearchController extends GetxController {
       channel?.stream.listen((data) {
         if (data.toString().contains("room_id")) {
           var room = json.decode(data);
-          Get.toNamed(AppRoutes.matchPage, arguments: room["room_id"]);
+          Get.offNamed(AppRoutes.matchPage, arguments: room["room_id"]);
         } else if (data.toString().length > 50) {
           List listUser = json.decode(data);
           for (var user in listUser) {
@@ -99,6 +98,7 @@ class SearchController extends GetxController {
           "matchEmail": matchUsers[index]["email"],
           "confirmation": true,
         }));
+        Get.back();
       },
       buttonColor: const Color(AppColors.purply),
     );

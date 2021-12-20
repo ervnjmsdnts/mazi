@@ -12,7 +12,6 @@ class MatchController extends GetxController {
   WebSocketChannel? channel;
   Location location = Location();
   RxDouble roomDistance = 0.0.obs;
-  List? room;
 
   @override
   void onInit() {
@@ -31,9 +30,9 @@ class MatchController extends GetxController {
       });
       channel?.stream.listen(
         (data) {
-          // var distance = json.decode(data);
-          // roomDistance.value = distance["distance"];
-          // print(roomDistance.value);
+          var distance = json.decode(data);
+          roomDistance.value =
+              double.parse(distance["distance"].toStringAsFixed(2));
         },
         onDone: () => locationSucbscription.cancel(),
       );

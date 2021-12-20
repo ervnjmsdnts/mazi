@@ -26,8 +26,8 @@ class MatchPage extends StatelessWidget {
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: const <Widget>[
-                      CircleAvatar(
+                    children: <Widget>[
+                      const CircleAvatar(
                         radius: 48,
                         backgroundColor: Color(AppColors.accentPinky),
                         child: Icon(
@@ -35,24 +35,29 @@ class MatchPage extends StatelessWidget {
                           size: 48,
                         ),
                       ),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      SizedBox(height: 5),
-                      CustomDivider(),
-                      CircleAvatar(
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      Obx(
+                        () => RegularText(
+                          text: "${matchController.roomDistance.value}m",
+                          fontSize: 32,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const SizedBox(height: 5),
+                      const CustomDivider(),
+                      const CircleAvatar(
                         radius: 48,
                         backgroundColor: Color(AppColors.bluey),
                         child: Icon(
@@ -60,8 +65,8 @@ class MatchPage extends StatelessWidget {
                           size: 48,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      RegularText(text: "Match Found", fontSize: 15),
+                      const SizedBox(height: 20),
+                      const RegularText(text: "Match Found", fontSize: 15),
                     ],
                   ),
                 )

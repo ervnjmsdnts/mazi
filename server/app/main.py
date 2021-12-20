@@ -85,22 +85,21 @@ class SearchManager(BaseManager):
 
 
 class MatchManager(BaseManager):
-    async def get_distance(self, websocket: WebSocket, data, room_id):
+    async def get_distance(self, websocket: WebSocket, room_id):
+        connected_users = []
         locations = []
-        new_distance = None
         for connection in self.connections:
-            locations.append(data)
+            connected_users.append(await user_collection.find_one({"email": connection.email}, {"_id": 0, "id": 0}))
+        for user in connected_users:
+            locations.append(user["location"])
         new_distance = locations[0] - locations[1]
 
         if new_distance < 0:
             new_distance *= -1
 
-        print(locations)
-        print(new_distance)
-
-        # await room_collection.update_one({"_id": ObjectId(room_id)}, {"$set": {"distance": new_distance}})
-        # room_distance = await room_collection.find_one({"_id": ObjectId(room_id)})
-        # await websocket.send_json({"distance": room_distance["distance"]})
+        await room_collection.update_one({"_id": ObjectId(room_id)}, {"$set": {"distance": new_distance}})
+        room_distance = await room_collection.find_one({"_id": ObjectId(room_id)})
+        await websocket.send_json({"distance": room_distance["distance"]})
 
 
 search_manager = SearchManager()
@@ -160,7 +159,7 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
 
                             if meters < 0:
                                 meters *= -1
-                            if meters > 250 and has_common_interests:
+                            if meters < 250 and has_common_interests:
                                 match_users = await getUsersFromLocation(location, user_id=user["id"])
                                 await websocket.send_json(match_users)
                 elif "pingedUserEmail" in data:
@@ -177,10 +176,8 @@ async def searchEndpoint(websocket: WebSocket, authorization: str = Header(...))
                         )
 
             except WebSocketDisconnect:
-                await user_collection.update_one({"id": user["id"]}, {"$set": {"location": None}})
                 await search_manager.disconnect(websocket, user_email=user["email"])
 
-# TODO Put needed functions here for match endpoint
 
 @app.websocket("/ws/match/{room_id}")
 async def matchEndpoint(room_id: str, websocket: WebSocket, authorization: str = Header(...)):
@@ -194,7 +191,8 @@ async def matchEndpoint(room_id: str, websocket: WebSocket, authorization: str =
                 magnetic_location = distance(location_data["location"], (0, 0)).m
                 await user_collection.update_one({"id": user["id"]}, {"$set": {"location": magnetic_location}})
 
-                await match_manager.get_distance(websocket, user["location"], room_id)
+                await match_manager.get_distance(websocket, room_id)
 
             except WebSocketDisconnect:
+                await user_collection.update_one({"id": user["id"]}, {"$set": {"location": None}})
                 match_manager.disconnect(websocket, user_email=user["email"])
